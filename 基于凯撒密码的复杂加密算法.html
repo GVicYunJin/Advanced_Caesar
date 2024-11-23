@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>高级文本加密与解密</title>
+  <style>
+    /* 基本样式 */
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      color: white;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 600px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      color: #f0f0f0;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    }
+
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 15px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      color: #333;
+      background: #f1f1f1;
+    }
+
+    button {
+      width: 48%;
+      padding: 15px;
+      font-size: 1rem;
+      margin: 10px 1%;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+    button:hover {
+      transform: translateY(-3px);
+      background: linear-gradient(135deg, #ff4b2b, #ff416c);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .output {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 1rem;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      button {
+        font-size: 0.9rem;
+        padding: 12px;
+      }
+
+      textarea, input[type="text"] {
+        font-size: 0.9rem;
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>文本加密与解密</h1>
+    <textarea id="inputText" placeholder="输入文本..."></textarea>
+    <input type="text" id="key" placeholder="输入密钥...">
+    <div>
+      <button onclick="encrypt()">加密</button>
+      <button onclick="decrypt()">解密</button>
+    </div>
+    <div class="output" id="outputText">加密或解密结果将显示在这里</div>
+  </div>
+
+  <script>
+    function generateShifts(key, reverse = false) {
+      const shifts = Array.from(key).map((char, index) => char.charCodeAt(0) + index);
+      return reverse ? shifts.reverse() : shifts;
+    }
+
+    function encryptDecryptOnce(text, key, charset, reverse = false, encrypt = true) {
+      const charsetLen = charset.length;
+      const shifts = generateShifts(key, reverse);
+      let result = '';
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const charIndex = charset.indexOf(char);
+
+        if (charIndex !== -1) {
+          let shift = shifts[i % shifts.length];
+          if (!encrypt) shift = -shift;
+          const newIndex = (charIndex + shift + charsetLen) % charsetLen;
+          result += charset[newIndex];
+        } else {
+          result += char;
+        }
+      }
+
+      return result;
+    }
+
+    function complexEncrypt(text, key) {
+      const charset1 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_+=<>?/";
+      const charset2 = charset1.split('').reverse().join('');
+      const firstEncryption = encryptDecryptOnce(text, key, charset1, false, true);
+      return encryptDecryptOnce(firstEncryption, key, charset2, true, true);
+    }
+
+    function complexDecrypt(encryptedText, key) {
+      const charset1 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_+=<>?/";
+      const charset2 = charset1.split('').reverse().join('');
+      const firstDecryption = encryptDecryptOnce(encryptedText, key, charset2, true, false);
+      return encryptDecryptOnce(firstDecryption, key, charset1, false, false);
+    }
+
+    function encrypt() {
+      const text = document.getElementById("inputText").value;
+      const key = document.getElementById("key").value;
+      if (!text || !key) {
+        alert("请确保输入文本和密钥！");
+        return;
+      }
+      const encryptedText = complexEncrypt(text, key);
+      document.getElementById("outputText").textContent = `加密结果：${encryptedText}`;
+    }
+
+    function decrypt() {
+      const text = document.getElementById("inputText").value;
+      const key = document.getElementById("key").value;
+      if (!text || !key) {
+        alert("请确保输入文本和密钥！");
+        return;
+      }
+      const decryptedText = complexDecrypt(text, key);
+      document.getElementById("outputText").textContent = `解密结果：${decryptedText}`;
+    }
+  </script>
+</body>
+</html>
